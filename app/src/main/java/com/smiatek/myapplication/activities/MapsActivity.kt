@@ -3,6 +3,7 @@ package com.smiatek.myapplication.activities
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
+import android.widget.ToggleButton
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -33,6 +34,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var client: FusedLocationProviderClient
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
@@ -57,18 +59,33 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      * installed Google Play services and returned to the app.
      */
     override fun onMapReady(googleMap: GoogleMap) {
+        val toggle: ToggleButton = findViewById(R.id.toggleButton)
+
         mMap = googleMap
         googleMap.isMyLocationEnabled = true
-        trackDeviceLocation()
-
+        //trackDeviceLocation()
+        toggle.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                trackDeviceLocation()
+            } else {
+                //else Save map
+            }
+        }
     }
 
     private fun trackDeviceLocation() {
         try {
             client.lastLocation.addOnCompleteListener {
                 startLocation = LatLng(it.result!!.latitude, it.result!!.longitude)
-                mMap.addMarker(MarkerOptions().position(startLocation).title("Marker in Wojtek"))
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(startLocation, 13f))
+//                mMap.addMarker(MarkerOptions().position(startLocation).title("Marker in Wojtek"))
+                mMap.moveCamera(
+                    CameraUpdateFactory.newLatLngZoom(
+                        startLocation,
+                        16f
+                    )
+                )  // the desired zoom level, in the range of 2.0 to 21.0.
+                // Values below this range are set to 2.0, and values above it are set to 21.0.
+                // Increase the value to zoom in. Not all areas have tiles at the largest zoom levels.
 
                 Handler().postDelayed({
                     client.lastLocation.addOnCompleteListener {
