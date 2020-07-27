@@ -12,13 +12,18 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
+import com.smiatek.myapplication.MyApp
 import com.smiatek.myapplication.R
 import com.smiatek.myapplication.api.ApiClient
 import com.smiatek.myapplication.api.ApiService
+import com.smiatek.myapplication.db.Route
+import com.smiatek.myapplication.db.RouteCoordinate
+import com.smiatek.myapplication.db.RouteCoordinateDAO
 import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -34,6 +39,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var client: FusedLocationProviderClient
 
+    private lateinit var routeCoordinates: ArrayList<RouteCoordinate>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,10 +72,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         //trackDeviceLocation()
         toggle.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
+                routeCoordinates = arrayListOf()
                 trackDeviceLocation()
             } else {
-                //else Save map
+                saveRoute()
             }
+        }
+    }
+
+    private fun saveRoute() {
+        GlobalScope.launch {
+            MyApp.getDatabase()?.routeCoordinateDAO()?.insertRoute(Route(routeCoordinates))
         }
     }
 
@@ -103,7 +116,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                                 ) {
                                     altitudeTv.text =
                                         response?.body()!!.last().toString() + " m n.p.m."
+                                    routeCoordinates.add(
+                                        RouteCoordinate(
+                                            it.result!!.latitude,
+                                            it.result!!.longitude,
+                                            response.body()!!.last().toDouble(),
+                                            System.currentTimeMillis()
+                                        )
+                                    )
+//                                        MyApp.getDatabase()?.routeCoordinateDAO()?.insertRouteCoordinate(
+//                                            RouteCoordinate(
+//                                                it.result!!.latitude,
+//                                                it.result!!.longitude,
+//                                                response.body()!!.last().toDouble(),
+//                                                System.currentTimeMillis()) )
                                 }
+
 
                                 override fun onFailure(call: Call<List<Double>>?, t: Throwable?) {
 
