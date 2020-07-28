@@ -8,12 +8,11 @@ import androidx.room.Query
 @Dao
 
 interface RouteCoordinateDAO {
-    //    @Insert
-//    fun insertRouteCoordinate(routeCoordinate: RouteCoordinate)
     @Insert
-    fun insertRoute(route: Route)
+    fun insertRouteCoordinate(routeCoordinate: RouteCoordinate)
+
 
     @Query("SELECT * FROM route_table")
-    fun getRouteCoordinates(): List<Route>
+    fun getRouteCoordinates(): List<RouteCoordinate>
 
 }

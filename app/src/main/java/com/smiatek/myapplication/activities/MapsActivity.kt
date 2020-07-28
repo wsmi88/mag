@@ -18,11 +18,11 @@ import com.smiatek.myapplication.MyApp
 import com.smiatek.myapplication.R
 import com.smiatek.myapplication.api.ApiClient
 import com.smiatek.myapplication.api.ApiService
-import com.smiatek.myapplication.db.Route
 import com.smiatek.myapplication.db.RouteCoordinate
 import com.smiatek.myapplication.db.RouteCoordinateDAO
 import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
@@ -39,7 +39,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var client: FusedLocationProviderClient
 
-    private lateinit var routeCoordinates: ArrayList<RouteCoordinate>
+    private var timeStamp: Long = 0
+    private var flag = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -72,17 +73,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         //trackDeviceLocation()
         toggle.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
-                routeCoordinates = arrayListOf()
+                flag = true
+                timeStamp = System.currentTimeMillis()
                 trackDeviceLocation()
             } else {
-                saveRoute()
+                flag = false
+                // SAVING ROUTE, CLOSING THREAD
             }
-        }
-    }
-
-    private fun saveRoute() {
-        GlobalScope.launch {
-            MyApp.getDatabase()?.routeCoordinateDAO()?.insertRoute(Route(routeCoordinates))
         }
     }
 
@@ -106,7 +103,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         poly =
                             mMap.addPolyline(PolylineOptions().add(startLocation).add(newPosition))
                         startLocation = newPosition
-                        trackDeviceLocation()
+                        if (flag) {
+                            trackDeviceLocation()
+                        }
                         Log.d("tomek", "interval")
                         service.getData("http://192.168.1.1")
                             .enqueue(object : Callback<List<Double>> {
@@ -115,21 +114,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                                     response: Response<List<Double>>?
                                 ) {
                                     altitudeTv.text =
-                                        response?.body()!!.last().toString() + " m n.p.m."
-                                    routeCoordinates.add(
-                                        RouteCoordinate(
-                                            it.result!!.latitude,
-                                            it.result!!.longitude,
-                                            response.body()!!.last().toDouble(),
-                                            System.currentTimeMillis()
-                                        )
-                                    )
-//                                        MyApp.getDatabase()?.routeCoordinateDAO()?.insertRouteCoordinate(
-//                                            RouteCoordinate(
-//                                                it.result!!.latitude,
-//                                                it.result!!.longitude,
-//                                                response.body()!!.last().toDouble(),
-//                                                System.currentTimeMillis()) )
+                                        response?.body()!!.last().toString() + " m a.s.l."
+
+                                    GlobalScope.async {
+                                        MyApp.getDatabase()?.routeCoordinateDAO()
+                                            ?.insertRouteCoordinate(
+                                                RouteCoordinate(
+                                                    it.result!!.latitude,
+                                                    it.result!!.longitude,
+                                                    response.body()!!.last().toDouble(),
+                                                    System.currentTimeMillis(),
+                                                    timeStamp
+                                                )
+                                            )
+                                    }
+
                                 }
 
 
