@@ -6,11 +6,12 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.smiatek.myapplication.R
+import com.smiatek.myapplication.db.Route
 import com.smiatek.myapplication.db.RouteCoordinate
 import kotlinx.android.synthetic.main.history_row.view.*
 import java.text.SimpleDateFormat
 
-class HistoryRecyclerAdapter(private val myDataset: List<RouteCoordinate>) :
+class HistoryRecyclerAdapter(private val myDataset: ArrayList<Route>) :
     RecyclerView.Adapter<HistoryRecyclerAdapter.MyViewHolder>() {
 
     // Provide a reference to the views for each data item
@@ -39,7 +40,7 @@ class HistoryRecyclerAdapter(private val myDataset: List<RouteCoordinate>) :
 
         val dateFormat = SimpleDateFormat("dd MMMM 'at 'HH:mm")
 
-        holder.dataView.text = dateFormat.format(myDataset[position].time_stamp)
+        holder.dataView.text = dateFormat.format(myDataset[position].timeStamp)
         holder.orderView.text = "Route ${position + 1}"
     }
 

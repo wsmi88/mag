@@ -4,10 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-//@Entity(tableName = "route_tablexxx")
-//data class Route(
-////    @ColumnInfo(name = "route") val listRouteCoordinate: List<RouteCoordinate>? = null
-//) {
-//    @PrimaryKey(autoGenerate = true)
-//    var uid: Int = 0
-//}
+data class Route(
+    val listRouteCoordinate: List<RouteCoordinate>? = null,
+    val timeStamp: Long?
+)
