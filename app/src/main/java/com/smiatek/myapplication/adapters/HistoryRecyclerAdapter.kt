@@ -1,13 +1,16 @@
 package com.smiatek.myapplication.adapters
 
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.smiatek.myapplication.R
+import com.smiatek.myapplication.db.RouteCoordinate
 import kotlinx.android.synthetic.main.history_row.view.*
+import java.text.SimpleDateFormat
 
-class HistoryRecyclerAdapter(private val myDataset: Array<String>) :
+class HistoryRecyclerAdapter(private val myDataset: List<RouteCoordinate>) :
     RecyclerView.Adapter<HistoryRecyclerAdapter.MyViewHolder>() {
 
     // Provide a reference to the views for each data item
@@ -25,14 +28,19 @@ class HistoryRecyclerAdapter(private val myDataset: Array<String>) :
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): HistoryRecyclerAdapter.MyViewHolder {
-        // create a new view
-    }
+    ): HistoryRecyclerAdapter.MyViewHolder = MyViewHolder(
+        LayoutInflater.from(parent.context).inflate(R.layout.history_row, parent, false)
+    )
 
     // Replace the contents of a view (invoked by the layout manager)
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
+
+        val dateFormat = SimpleDateFormat("dd MMMM 'at 'HH:mm")
+
+        holder.dataView.text = dateFormat.format(myDataset[position].time_stamp)
+        holder.orderView.text = "Route ${position + 1}"
     }
 
     // Return the size of your dataset (invoked by the layout manager)

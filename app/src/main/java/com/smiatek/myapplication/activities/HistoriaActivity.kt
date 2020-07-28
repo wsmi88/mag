@@ -8,35 +8,27 @@ import androidx.recyclerview.widget.RecyclerView
 import com.smiatek.myapplication.MyApp
 import com.smiatek.myapplication.R
 import com.smiatek.myapplication.adapters.HistoryRecyclerAdapter
+import com.smiatek.myapplication.db.RouteCoordinateDAO
 import kotlinx.coroutines.*
 
 class HistoriaActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
-    private lateinit var viewAdapter: RecyclerView.Adapter<*>
+    private lateinit var viewAdapter: HistoryRecyclerAdapter
     private lateinit var viewManager: RecyclerView.LayoutManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_historia)
-
+        recyclerView = findViewById(R.id.history_recycler)
         viewManager = LinearLayoutManager(this)
-        viewAdapter = HistoryRecyclerAdapter(myDataset)
-        recyclerView = findViewById<RecyclerView>(R.id.history_recycler).apply {
-            // use this setting to improve performance if you know that changes
-            // in content do not change the layout size of the RecyclerView
-            setHasFixedSize(true)
 
-            // use a linear layout manager
-            layoutManager = viewManager
-
-            // specify an viewAdapter (see also next example)
-            adapter = viewAdapter
-
-            GlobalScope.async {
-                Log.d(
-                    "tomek",
-                    " " + MyApp.getDatabase()?.routeCoordinateDAO()?.getRouteCoordinates()?.size
-                )
+        CoroutineScope(Dispatchers.IO).launch {
+            var list = MyApp.getDatabase()?.routeCoordinateDAO()?.getRouteCoordinates()
+            withContext(Dispatchers.Main) {
+                viewAdapter = HistoryRecyclerAdapter(list!!)
+                recyclerView.layoutManager = viewManager
+                recyclerView.adapter = viewAdapter
             }
         }
     }
+}
