@@ -1,5 +1,6 @@
 package com.smiatek.myapplication.activities
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -31,7 +32,10 @@ class HistoriaActivity : AppCompatActivity() {
             var list = MyApp.getDatabase()?.routeCoordinateDAO()?.getRouteCoordinates()
 
             withContext(Dispatchers.Main) {
-                viewAdapter = HistoryRecyclerAdapter(sortGlobalList(createRouteList(list!!), list))
+                viewAdapter =
+                    HistoryRecyclerAdapter(sortGlobalList(createRouteList(list!!), list)) {
+                        startActivity(Intent(this@HistoriaActivity, DetailActivity::class.java))
+                    }
                 recyclerView.layoutManager = viewManager
                 recyclerView.adapter = viewAdapter
             }

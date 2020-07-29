@@ -11,7 +11,10 @@ import com.smiatek.myapplication.db.RouteCoordinate
 import kotlinx.android.synthetic.main.history_row.view.*
 import java.text.SimpleDateFormat
 
-class HistoryRecyclerAdapter(private val myDataset: ArrayList<Route>) :
+class HistoryRecyclerAdapter(
+    private val myDataset: ArrayList<Route>,
+    private val onRouteClick: (Route) -> Unit
+) :
     RecyclerView.Adapter<HistoryRecyclerAdapter.MyViewHolder>() {
 
     // Provide a reference to the views for each data item
@@ -42,6 +45,11 @@ class HistoryRecyclerAdapter(private val myDataset: ArrayList<Route>) :
 
         holder.dataView.text = dateFormat.format(myDataset[position].timeStamp)
         holder.orderView.text = "Route ${position + 1}"
+
+        //clickable
+        holder.itemView.setOnClickListener {
+            onRouteClick(myDataset[position])
+        }
     }
 
     // Return the size of your dataset (invoked by the layout manager)
