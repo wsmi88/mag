@@ -13,6 +13,7 @@ import com.smiatek.myapplication.db.Route
 import com.smiatek.myapplication.db.RouteCoordinate
 import com.smiatek.myapplication.db.RouteCoordinateDAO
 import kotlinx.coroutines.*
+import java.io.Serializable
 
 class HistoriaActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
@@ -33,8 +34,10 @@ class HistoriaActivity : AppCompatActivity() {
 
             withContext(Dispatchers.Main) {
                 viewAdapter =
-                    HistoryRecyclerAdapter(sortGlobalList(createRouteList(list!!), list)) {
-                        startActivity(Intent(this@HistoriaActivity, DetailActivity::class.java))
+                    HistoryRecyclerAdapter(sortGlobalList(list!!)) {
+                        var i = Intent(this@HistoriaActivity, DetailActivity::class.java)
+                        i.putExtra("route_data", it as Serializable)
+                        startActivity(i)
                     }
                 recyclerView.layoutManager = viewManager
                 recyclerView.adapter = viewAdapter
@@ -43,49 +46,21 @@ class HistoriaActivity : AppCompatActivity() {
     }
 
     private fun sortGlobalList(
-        routeList: ArrayList<Route>,
         coorindatesList: List<RouteCoordinate>
-    ): ArrayList<Route> {
+    ): MutableList<Route> {
+        val positionList = mutableListOf<Long>()
+        val routeList = mutableListOf<Route>()
 
-        for (i in 0..routeList.size) {
-            val map = coorindatesList.associateBy({ i }, { it.time_stamp }).toMap()
+        coorindatesList.forEach { coordinate ->
+            if ((positionList.any { it == coordinate.time_stamp }))
+                routeList.find { it.listRouteCoordinate[0].time_stamp == coordinate.time_stamp }?.listRouteCoordinate?.add(
+                    coordinate
+                )
+            else
+                routeList.add(Route(mutableListOf(coordinate), coordinate.time_stamp))
+            positionList.add(coordinate.time_stamp)
         }
 
-        sortedRoutes = ArrayList()
-        for (i in 0..routeList.size) {
-            sortedCoordinates = ArrayList()
-            var timestamp: Long? = 0
-            Log.d("wojtek", "route $i")
-            for (j in 0..coorindatesList.size) {
-
-                try {
-                    var cor1: Long = coorindatesList[j].time_stamp!!
-                    var cor2: Long = coorindatesList[j + 1].time_stamp!!
-                    if (cor1 == cor2) {
-                        sortedCoordinates.add(coorindatesList[j])
-                        timestamp = coorindatesList[j].time_stamp
-                    }
-                } catch (e: Exception) {
-                }
-
-            }
-            sortedRoutes.add(Route(sortedCoordinates, timestamp))
-        }
-        return sortedRoutes
-    }
-
-    private fun createRouteList(list: List<RouteCoordinate>): ArrayList<Route> {
-        var routes = ArrayList<Route>()
-        for (i in 0..list.size) {
-            try {
-                if (list[i].time_stamp != list[i + 1].time_stamp) {
-                    routes.add(Route(list, 0))
-                }
-            } catch (e: Exception) {
-
-            }
-        }
-
-        return routes
+        return routeList
     }
 }

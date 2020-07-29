@@ -12,7 +12,7 @@ import kotlinx.android.synthetic.main.history_row.view.*
 import java.text.SimpleDateFormat
 
 class HistoryRecyclerAdapter(
-    private val myDataset: ArrayList<Route>,
+    private val myDataset: MutableList<Route>,
     private val onRouteClick: (Route) -> Unit
 ) :
     RecyclerView.Adapter<HistoryRecyclerAdapter.MyViewHolder>() {
