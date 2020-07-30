@@ -2,12 +2,11 @@ package com.smiatek.myapplication.activities
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.github.mikephil.charting.components.AxisBase
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.formatter.IAxisValueFormatter
+import com.github.mikephil.charting.formatter.ValueFormatter
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -32,27 +31,27 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
 //        //data form db
         route = intent.getSerializableExtra("route_data") as Route
 //
-//        //data for altitude chart
-//        //val dateFormat = SimpleDateFormat("HH:mm")
-//        val altChart = ArrayList<Entry>()
-//        route.listRouteCoordinate.forEach {
-//            altChart.add(Entry(it.time?.toFloat()!!, it.altitude?.toFloat()!!))
-//        }
+        //data for altitude chart
+        //val dateFormat = SimpleDateFormat("HH:mm")
+        val altChart = ArrayList<Entry>()
+        route.listRouteCoordinate.forEach {
+            altChart.add(Entry(it.timediff?.toFloat()!!, it.altitude?.toFloat()!!))
+        }
         //TEST
-        val entries = ArrayList<Entry>()
-
-//Part2
-        entries.add(Entry(1f, 10f))
-        entries.add(Entry(2f, 2f))
-        entries.add(Entry(3f, 7f))
-        entries.add(Entry(4f, 20f))
-        entries.add(Entry(5f, 16f))
+//        val entries = ArrayList<Entry>()
+//
+////Part2
+//        entries.add(Entry(1f, 10f))
+//        entries.add(Entry(2f, 2f))
+//        entries.add(Entry(3f, 7f))
+//        entries.add(Entry(4f, 20f))
+//        entries.add(Entry(5f, 16f))
 
         //TEST
 
         //Part3
 
-        val vl = LineDataSet(entries, "test")//altChart, "Altitude m a.s.l.")
+        val vl = LineDataSet(altChart, "test")//altChart, "Altitude m a.s.l.")
         //Part4
         vl.setDrawValues(true)
         vl.setDrawFilled(true)
@@ -60,7 +59,12 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
 
         var xAxis = lineChart.xAxis
         xAxis.position = XAxis.XAxisPosition.BOTTOM
-        //    xAxis.valueFormatter = MyAxisValueFormatter()
+        xAxis.valueFormatter = object : ValueFormatter() {
+            override fun getFormattedValue(value: Float): String {
+                var time: String = convertSecondsToHHMMSS(value.toLong())
+                return time
+            }
+        }
 
         lineChart.data = LineData(vl)
 //        vl.fillColor = R.color.gray
@@ -129,4 +133,17 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
         TODO("Not yet implemented")
     }
 
+    fun convertSecondsToHHMMSS(millis: Long): String {
+        var seconds: Long = (millis / 1000) % 60
+        var minutes: Long = (millis / (1000 * 60)) % 60
+        var hours: Long = (millis / (1000 * 60 * 60))
+
+        var convertedTime: StringBuilder = StringBuilder()
+        convertedTime.append(if (hours == 0L) "00" else if (hours < 10) "0$hours" else hours.toString())
+        convertedTime.append(":")
+        convertedTime.append(if (minutes == 0L) "00" else if (minutes < 10) "0$minutes" else minutes.toString())
+        convertedTime.append(":")
+        convertedTime.append(if (seconds == 0L) "00" else if (seconds < 10) "0$seconds" else seconds.toString())
+        return convertedTime.toString()
+    }
 }
