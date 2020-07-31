@@ -1,5 +1,6 @@
 package com.smiatek.myapplication.activities
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mikephil.charting.components.XAxis
@@ -23,37 +24,35 @@ import java.text.SimpleDateFormat
 class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, OnMapReadyCallback {
 
     lateinit var route: Route
-
+    private val FILL_VERTICAL = 112
+    
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
 
-//        //data form db
+        //data from db
         route = intent.getSerializableExtra("route_data") as Route
-//
+
+        //data to TEXTVIEW
+        val dayFormat = SimpleDateFormat("dd MMMM YYYY")
+        val startTimeFormat = SimpleDateFormat("HH:mm")
+        data_tv.text =
+            "${dayFormat.format(route.timeStamp)} \n" +
+                    "Start time: ${startTimeFormat.format(route.timeStamp)} \n" +
+                    "Duration time: ${convertSecondsToHHMMSS(route.listRouteCoordinate.last().timediff)}"
+        data_tv.gravity = FILL_VERTICAL
+        //data_tv.textSize =s
+
         //data for altitude chart
-        //val dateFormat = SimpleDateFormat("HH:mm")
         val altChart = ArrayList<Entry>()
         route.listRouteCoordinate.forEach {
             altChart.add(Entry(it.timediff?.toFloat()!!, it.altitude?.toFloat()!!))
         }
-        //TEST
-//        val entries = ArrayList<Entry>()
-//
-////Part2
-//        entries.add(Entry(1f, 10f))
-//        entries.add(Entry(2f, 2f))
-//        entries.add(Entry(3f, 7f))
-//        entries.add(Entry(4f, 20f))
-//        entries.add(Entry(5f, 16f))
 
-        //TEST
+        val vl = LineDataSet(altChart, "Altitude m a.s.l.")
 
-        //Part3
-
-        val vl = LineDataSet(altChart, "test")//altChart, "Altitude m a.s.l.")
-        //Part4
-        vl.setDrawValues(true)
+        vl.setDrawValues(false) // true if you want to display value of all points
         vl.setDrawFilled(true)
         vl.lineWidth = 3f
 
@@ -66,27 +65,13 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
             }
         }
 
+
         lineChart.data = LineData(vl)
-//        vl.fillColor = R.color.gray
-//        vl.fillAlpha = R.color.red
-        //Part5
-//        lineChart.xAxis.valueFormatter.getFormattedValue()
         lineChart.xAxis.labelRotationAngle = 0f
-
-
-        //Part6
         lineChart.data = LineData(vl)
-//
-        //Part7
-//        lineChart.axisRight.isEnabled = false
-//        lineChart.xAxis.axisMaximum = j+0.1f
-//
-        //Part8
         lineChart.setTouchEnabled(true)
         lineChart.setPinchZoom(true)
-//
-        //Part9
-        lineChart.description.text = "Time"
+        lineChart.description.text = "Time HH:MM:SS"
 
         // Get the SupportMapFragment and request notification when the map is ready to be used.
         val mapFragment = supportFragmentManager
@@ -118,7 +103,7 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
 
         val polyline1 = googleMap.addPolyline(
             PolylineOptions()
-                .clickable(true)
+                .clickable(false) // do przemyslenia czy cos wyswietlac na lini - czas/wysokosc?
                 .addAll(coordList)
         )
 
