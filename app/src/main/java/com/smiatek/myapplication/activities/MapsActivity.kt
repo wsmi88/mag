@@ -73,6 +73,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         //trackDeviceLocation()
         toggle.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
+                mMap.clear()
                 flag = true
                 timeStamp = System.currentTimeMillis()
                 trackDeviceLocation()
@@ -106,7 +107,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         if (flag) {
                             trackDeviceLocation()
                         }
-                        Log.d("tomek", "interval")
+                        Log.d("wojtek", "interval")
                         service.getData("http://192.168.1.1")
                             .enqueue(object : Callback<List<Double>> {
                                 override fun onResponse(
