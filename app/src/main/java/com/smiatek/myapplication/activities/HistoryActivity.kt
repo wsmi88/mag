@@ -3,7 +3,6 @@ package com.smiatek.myapplication.activities
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.smiatek.myapplication.MyApp
@@ -11,11 +10,10 @@ import com.smiatek.myapplication.R
 import com.smiatek.myapplication.adapters.HistoryRecyclerAdapter
 import com.smiatek.myapplication.db.Route
 import com.smiatek.myapplication.db.RouteCoordinate
-import com.smiatek.myapplication.db.RouteCoordinateDAO
 import kotlinx.coroutines.*
 import java.io.Serializable
 
-class HistoriaActivity : AppCompatActivity() {
+class HistoryActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var viewAdapter: HistoryRecyclerAdapter
     private lateinit var viewManager: RecyclerView.LayoutManager
@@ -35,7 +33,7 @@ class HistoriaActivity : AppCompatActivity() {
             withContext(Dispatchers.Main) {
                 viewAdapter =
                     HistoryRecyclerAdapter(sortGlobalList(list!!)) {
-                        var i = Intent(this@HistoriaActivity, DetailActivity::class.java)
+                        var i = Intent(this@HistoryActivity, DetailActivity::class.java)
                         i.putExtra("route_data", it as Serializable)
                         startActivity(i)
                     }

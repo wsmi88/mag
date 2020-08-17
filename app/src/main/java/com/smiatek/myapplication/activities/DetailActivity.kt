@@ -1,7 +1,17 @@
 package com.smiatek.myapplication.activities
 
 import android.annotation.SuppressLint
+import android.bluetooth.*
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
+import android.os.Handler
+import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
@@ -25,7 +35,17 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
 
     lateinit var route: Route
     private val FILL_VERTICAL = 112
-    
+
+    private val STATE_DISCONNECTED = 0
+    private val STATE_CONNECTING = 1
+    private val STATE_CONNECTED = 2
+    val ACTION_GATT_CONNECTED = "com.example.bluetooth.le.ACTION_GATT_CONNECTED"
+    val ACTION_GATT_DISCONNECTED = "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED"
+    val ACTION_GATT_SERVICES_DISCOVERED =
+        "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED"
+    val ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE"
+    val EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA"
+
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,8 +61,8 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
             "${dayFormat.format(route.timeStamp)} \n" +
                     "Start time: ${startTimeFormat.format(route.timeStamp)} \n" +
                     "Duration time: ${convertSecondsToHHMMSS(route.listRouteCoordinate.last().timediff)}"
+        //data_tv.textSize = 20sp
         data_tv.gravity = FILL_VERTICAL
-        //data_tv.textSize =s
 
         //data for altitude chart
         val altChart = ArrayList<Entry>()
@@ -51,7 +71,6 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
         }
 
         val vl = LineDataSet(altChart, "Altitude m a.s.l.")
-
         vl.setDrawValues(false) // true if you want to display value of all points
         vl.setDrawFilled(true)
         vl.lineWidth = 3f
@@ -65,6 +84,16 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
             }
         }
 
+        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothAdapter = bluetoothManager.adapter
+
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            startActivityForResult(enableBtIntent, 10)
+        } else {
+            scanBLEDevices(scanCallback)
+        }
+
 
         lineChart.data = LineData(vl)
         lineChart.xAxis.labelRotationAngle = 0f
@@ -72,12 +101,67 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
         lineChart.setTouchEnabled(true)
         lineChart.setPinchZoom(true)
         lineChart.description.text = "Time HH:MM:SS"
+        val markerView = CustomMarker(this@DetailActivity, R.layout.marker_view)
+        lineChart.marker = markerView
 
         // Get the SupportMapFragment and request notification when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment?
         mapFragment?.getMapAsync(this)
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == 10) {
+            scanBLEDevices(scanCallback)
+        }
+    }
+
+    fun scanBLEDevices(scanCallback: ScanCallback) {
+        val bluetoothScanner = BluetoothAdapter.getDefaultAdapter().bluetoothLeScanner
+        var scanning = false
+        val handler = Handler()
+
+        if (!scanning) {
+            handler.postDelayed({
+                scanning = false
+                bluetoothScanner.stopScan(scanCallback)
+            }, 1000)
+            scanning = true
+            bluetoothScanner.startScan(scanCallback)
+        } else {
+            scanning = false
+            bluetoothScanner.stopScan(scanCallback)
+        }
+    }
+
+    private val scanCallback: ScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+            super.onScanResult(callbackType, result)
+
+//            if(result?.device?.uuids?.equals("TX Characteristic")){
+            result?.device?.connectGatt(applicationContext, true, object : BluetoothGattCallback() {
+                override fun onConnectionStateChange(
+                    gatt: BluetoothGatt?,
+                    status: Int,
+                    newState: Int
+                ) {
+                    sendBroadcast(Intent(ACTION_DATA_AVAILABLE))
+                }
+            })
+//            }
+        }
+    }
+
+    class GattReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            //    Toast.makeText(context, "Action: " + intent?.action(), Toast.LENGTH_SHORT).show()
+            Log.d("wojtek", " weszlo")
+
+        }
+    }
+
 
     /**
      * Manipulates the map when it's available.

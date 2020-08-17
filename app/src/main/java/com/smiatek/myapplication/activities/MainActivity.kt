@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         historiaBtn.setOnClickListener {
-            startActivity(Intent(this@MainActivity, HistoriaActivity::class.java))
+            startActivity(Intent(this@MainActivity, HistoryActivity::class.java))
         }
     }
 }
