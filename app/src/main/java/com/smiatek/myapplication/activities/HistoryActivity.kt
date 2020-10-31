@@ -32,10 +32,16 @@ class HistoryActivity : AppCompatActivity() {
 
             withContext(Dispatchers.Main) {
                 viewAdapter =
-                    HistoryRecyclerAdapter(sortGlobalList(list!!)) {
+                    HistoryRecyclerAdapter(sortGlobalList(list!!), {
                         var i = Intent(this@HistoryActivity, DetailActivity::class.java)
                         i.putExtra("route_data", it as Serializable)
                         startActivity(i)
+                    }) {
+                        it.listRouteCoordinate.forEach {
+                            GlobalScope.async {
+                                MyApp.getDatabase()?.routeCoordinateDAO()?.deleteRouteCoordinate(it)
+                            }
+                        }
                     }
                 recyclerView.layoutManager = viewManager
                 recyclerView.adapter = viewAdapter

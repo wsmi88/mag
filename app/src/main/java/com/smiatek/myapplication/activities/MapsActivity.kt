@@ -1,12 +1,14 @@
 package com.smiatek.myapplication.activities
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothManager
+import android.bluetooth.*
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.ToggleButton
 import androidx.appcompat.app.AppCompatActivity
@@ -22,10 +24,12 @@ import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.smiatek.myapplication.MyApp
 import com.smiatek.myapplication.R
+import com.smiatek.myapplication.adapters.ScanResultAdapter
 import com.smiatek.myapplication.api.*
 import com.smiatek.myapplication.api.WeatherClient.Companion.getClient
 import com.smiatek.myapplication.db.RouteCoordinate
 import com.smiatek.myapplication.db.RouteCoordinateDAO
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -33,15 +37,18 @@ import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.math.BigDecimal
+import java.math.RoundingMode
+import java.util.*
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     //for bluetooth connection
     // Initializes Bluetooth adapter.
-    val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-    val bluetoothAdapter = bluetoothManager.adapter
-    var bluetoothGatt: BluetoothGatt? = null
+//    val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+//    val bluetoothAdapter = bluetoothManager.adapter
+//    var bluetoothGatt: BluetoothGatt? = null
 
     private lateinit var mMap: GoogleMap
     private lateinit var service: ApiService
@@ -74,29 +81,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         serviceWheather = WeatherClient.getClient()
             .create(WeatherService::class.java)
 
-        //TEST
-//        val call = serviceWheather.getCurrentWeatherData(
-//            "139",//LatLng(it.result!!.latitude, it.result!!.longitude).latitude.toString(),
-//            "35",//LatLng(it.result!!.latitude, it.result!!.longitude).longitude.toString(),
-//            AppId
-//        )
-//        call.enqueue(object : Callback<WeatherResponse> {
-//            override fun onResponse(
-//                call: Call<WeatherResponse>?,
-//                response: Response<WeatherResponse>?
-//            ) {
-//                if (response?.code() == 200) {
-//                    val weatherResponse = response?.body()!!
-//                    currentPressure = weatherResponse.main!!.pressure
-//                    Log.d("wojtek", currentPressure.toString())
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<WeatherResponse>?, t: Throwable?) {
-//                altitudeTv.text = "failure"
-//            }
-//        })
-
     }
     /**
      * Manipulates the map once available.
@@ -112,14 +96,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         var REQUEST_ENABLE_BT: Int = 2
         // Ensures Bluetooth is available on the device and it is enabled. If not,
         // displays a dialog requesting user permission to enable Bluetooth.
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
-        }
+//        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+//            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+//            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT)
+//        }
 
         //
         mMap = googleMap
-        googleMap.isMyLocationEnabled = true
+//        googleMap.isMyLocationEnabled = true
         //trackDeviceLocation()
         toggle.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
@@ -127,7 +111,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 flag = true
                 timeStamp = System.currentTimeMillis()
                 trackDeviceLocation()
-                //TEST
+                //TEST - getting pressure from API
                 serviceWheather.getCurrentWeatherData("39", "135", AppId)
                     .enqueue(object : Callback<WeatherResponse> {
                         override fun onResponse(
@@ -136,11 +120,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                         ) {
                             val weatherResponse = response?.body()!!
                             currentPressure = weatherResponse.main!!.pressure
-                            Log.d("wojtek", currentPressure.toString())
+                            Log.d("wojtek current pressure", currentPressure.toString())
                         }
 
                         override fun onFailure(call: Call<WeatherResponse>?, t: Throwable?) {
-                            altitudeTv.text = "failure"
+//                            altitudeTv.text = "failure"
                         }
                     }) //END OF TEST
 
@@ -185,7 +169,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                                     call: Call<List<Double>>?,
                                     response: Response<List<Double>>?
                                 ) {
-                                    altitudeTv.text = currentPressure.toString()
+//                                    altitudeTv.text = currentPressure.toString()
                                     //response?.body()!!.last().toString() + " m a.s.l."
 
                                     // SENDING DARA TO DB

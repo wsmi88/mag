@@ -2,12 +2,15 @@ package com.smiatek.myapplication.activities
 
 import android.annotation.SuppressLint
 import android.bluetooth.*
+import android.bluetooth.BluetoothAdapter.ACTION_DISCOVERY_FINISHED
+import android.bluetooth.BluetoothDevice.ACTION_FOUND
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.nfc.NfcAdapter.EXTRA_DATA
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
@@ -25,10 +28,13 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
+import com.smiatek.myapplication.MyReceiver
 import com.smiatek.myapplication.R
 import com.smiatek.myapplication.db.Route
 import kotlinx.android.synthetic.main.activity_detail.*
 import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, OnMapReadyCallback {
@@ -50,6 +56,16 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detail)
+
+        // val filter = IntentFilter().apply {
+//            addAction(ACTION_DATA_AVAILABLE)
+//            addAction(ACTION_FOUND)
+//            addAction(ACTION_DISCOVERY_FINISHED)
+        //           addAction("com.example.bluetooth.le.ACTION_GATT_CONNECTED")
+        //     }
+
+        //     val myReceiver = GattReceiver()
+        //     registerReceiver(myReceiver, filter)
 
         //data from db
         route = intent.getSerializableExtra("route_data") as Route
@@ -84,15 +100,15 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
             }
         }
 
-        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        val bluetoothAdapter = bluetoothManager.adapter
+        //     val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        //      val bluetoothAdapter = bluetoothManager.adapter
 
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
-            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            startActivityForResult(enableBtIntent, 10)
-        } else {
-            scanBLEDevices(scanCallback)
-        }
+        //       if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled) {
+        //          val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+        //           startActivityForResult(enableBtIntent, 10)
+        //       } else {
+        //          scanBLEDevices(scanCallback)
+        //     }
 
 
         lineChart.data = LineData(vl)
@@ -110,57 +126,105 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
         mapFragment?.getMapAsync(this)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
+//    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+//        super.onActivityResult(requestCode, resultCode, data)
+//
+//        if (requestCode == 10) {
+//            scanBLEDevices(scanCallback)
+//        }
+//    }
 
-        if (requestCode == 10) {
-            scanBLEDevices(scanCallback)
-        }
-    }
+//    fun scanBLEDevices(scanCallback: ScanCallback) {
+//        val bluetoothScanner = BluetoothAdapter.getDefaultAdapter().bluetoothLeScanner
+//        var scanning = false
+//        val handler = Handler()
+//
+//        if (!scanning) {
+//            handler.postDelayed({
+//                scanning = false
+//                bluetoothScanner.stopScan(scanCallback)
+//            }, 1000)
+//            scanning = true
+//            bluetoothScanner.startScan(scanCallback)
+//        } else {
+//            scanning = false
+//            bluetoothScanner.stopScan(scanCallback)
+//        }
+//    }
 
-    fun scanBLEDevices(scanCallback: ScanCallback) {
-        val bluetoothScanner = BluetoothAdapter.getDefaultAdapter().bluetoothLeScanner
-        var scanning = false
-        val handler = Handler()
+//    private val scanCallback: ScanCallback = object : ScanCallback() {
+//        override fun onScanResult(callbackType: Int, result: ScanResult?) {
+//            super.onScanResult(callbackType, result)
+//
+////            if(result?.device?.uuids?.equals("TX Characteristic")){
+//            result?.device?.connectGatt(applicationContext, true, object : BluetoothGattCallback() {
+//                override fun onConnectionStateChange(
+//                    gatt: BluetoothGatt?,
+//                    status: Int,
+//                    newState: Int
+//                ) {
+//                    gatt?.discoverServices()
+//                    sendBroadcast(Intent("com.example.bluetooth.le.ACTION_GATT_CONNECTED"))
+//                }
+//                var PRESSURE_CHARACTERISTIC_CONFIG_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
+//                var CLIENT_CHARACTERISTIC_CONFIG_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
+//
+//                override fun onCharacteristicChanged(
+//                    gatt: BluetoothGatt?,
+//                    characteristic: BluetoothGattCharacteristic?
+//                ) {
+//
+//
+//                    Log.d("wojtek", "DANE: " + characteristic?.value.toString())
+//                }
+//
+//                override fun onDescriptorWrite(
+//                    gatt: BluetoothGatt?,
+//                    descriptor: BluetoothGattDescriptor?,
+//                    status: Int
+//                ) {
+//                    var characteristic: BluetoothGattCharacteristic = gatt?.getService(UUID.fromString(CLIENT_CHARACTERISTIC_CONFIG_UUID))!!.getCharacteristic(UUID.fromString(PRESSURE_CHARACTERISTIC_CONFIG_UUID))
+//                    characteristic.value = byteArrayOf(1,1)
+//                    gatt.writeCharacteristic(characteristic)
+//                }
+//
+//                override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
+//                    var characteristic: BluetoothGattCharacteristic = gatt?.getService(UUID.fromString(CLIENT_CHARACTERISTIC_CONFIG_UUID))!!.getCharacteristic(UUID.fromString(PRESSURE_CHARACTERISTIC_CONFIG_UUID))
+//                    gatt.setCharacteristicNotification(characteristic, true)
+//                    var descriptor: BluetoothGattDescriptor= characteristic?.getDescriptor(UUID.fromString(PRESSURE_CHARACTERISTIC_CONFIG_UUID))!!
+//                    descriptor.setValue(
+//                        BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+//                    )
+//                    gatt?.writeDescriptor(descriptor)
+//                }
+//            })
+//
+//
+//
+//
+////            }
+//        }
+//
+//
+//
+//    }
 
-        if (!scanning) {
-            handler.postDelayed({
-                scanning = false
-                bluetoothScanner.stopScan(scanCallback)
-            }, 1000)
-            scanning = true
-            bluetoothScanner.startScan(scanCallback)
-        } else {
-            scanning = false
-            bluetoothScanner.stopScan(scanCallback)
-        }
-    }
-
-    private val scanCallback: ScanCallback = object : ScanCallback() {
-        override fun onScanResult(callbackType: Int, result: ScanResult?) {
-            super.onScanResult(callbackType, result)
-
-//            if(result?.device?.uuids?.equals("TX Characteristic")){
-            result?.device?.connectGatt(applicationContext, true, object : BluetoothGattCallback() {
-                override fun onConnectionStateChange(
-                    gatt: BluetoothGatt?,
-                    status: Int,
-                    newState: Int
-                ) {
-                    sendBroadcast(Intent(ACTION_DATA_AVAILABLE))
-                }
-            })
+//    class GattReceiver : BroadcastReceiver() {
+//        override fun onReceive(context: Context?, intent: Intent?) {
+//            //    Toast.makeText(context, "Action: " + intent?.action(), Toast.LENGTH_SHORT).show()
+//            when (intent?.action) {
+//                "com.example.bluetooth.le.ACTION_GATT_CONNECTED" -> {
+//                    val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+//                    Log.d("wojtek", " ${device}")
+//                }
+//                BluetoothAdapter.ACTION_DISCOVERY_FINISHED -> {
+//                    context?.unregisterReceiver(this)
+//                }
 //            }
-        }
-    }
-
-    class GattReceiver : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent?) {
-            //    Toast.makeText(context, "Action: " + intent?.action(), Toast.LENGTH_SHORT).show()
-            Log.d("wojtek", " weszlo")
-
-        }
-    }
+//            Log.d("wojtek", " weszlo ${intent?.getStringExtra(EXTRA_DATA)}")
+//
+//        }
+//    }
 
 
     /**
@@ -182,10 +246,11 @@ class DetailActivity : AppCompatActivity(), GoogleMap.OnPolylineClickListener, O
 
         route.listRouteCoordinate.forEach {
             coordList.add(LatLng(it.latitude!!, it.longitude!!))
+            Log.d("wojtek", it.latitude.toString())
         }
 
 
-        val polyline1 = googleMap.addPolyline(
+        googleMap.addPolyline(
             PolylineOptions()
                 .clickable(false) // do przemyslenia czy cos wyswietlac na lini - czas/wysokosc?
                 .addAll(coordList)

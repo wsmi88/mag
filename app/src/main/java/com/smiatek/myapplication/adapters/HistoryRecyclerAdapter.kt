@@ -13,7 +13,8 @@ import java.text.SimpleDateFormat
 
 class HistoryRecyclerAdapter(
     private val myDataset: MutableList<Route>,
-    private val onRouteClick: (Route) -> Unit
+    private val onRouteClick: (Route) -> Unit,
+    private val onRouteLongClick: (Route) -> Unit
 ) :
     RecyclerView.Adapter<HistoryRecyclerAdapter.MyViewHolder>() {
 
@@ -49,6 +50,13 @@ class HistoryRecyclerAdapter(
         //clickable
         holder.itemView.setOnClickListener {
             onRouteClick(myDataset[position])
+        }
+
+        holder.itemView.setOnLongClickListener {
+            onRouteLongClick(myDataset[position])
+            myDataset.removeAt(position)
+            notifyItemRemoved(position)
+            false
         }
     }
 

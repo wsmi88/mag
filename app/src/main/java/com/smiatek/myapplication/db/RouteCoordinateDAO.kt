@@ -1,9 +1,7 @@
 package com.smiatek.myapplication.db
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
+import retrofit2.http.DELETE
 
 @Dao
 
@@ -15,4 +13,6 @@ interface RouteCoordinateDAO {
     @Query("SELECT * FROM route_table")
     fun getRouteCoordinates(): List<RouteCoordinate>
 
+    @Delete
+    fun deleteRouteCoordinate(routeCoordinate: RouteCoordinate)
 }
